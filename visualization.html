@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Satisfaction — Results</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-cream: #F9F6F1;
+            --bg-card: #FFFFFF;
+            --text-primary: #2D2A26;
+            --text-secondary: #6B6560;
+            --text-muted: #9E9891;
+            --accent-yes: #3D8B6E;
+            --accent-no: #C4756B;
+            --border: #E8E4DE;
+            --shadow: rgba(45, 42, 38, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg-cream);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .back-link:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+        
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        
+        .summary-value.positive { color: var(--accent-yes); }
+        .summary-value.negative { color: var(--accent-no); }
+        
+        .summary-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        .summary-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        
+        /* Charts */
+        .chart-section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+        
+        .chart-title {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+        
+        .chart-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Year breakdown table */
+        .year-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .year-table th,
+        .year-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .year-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .year-table tbody tr:hover {
+            background: var(--bg-cream);
+        }
+        
+        .year-table .year-col {
+            font-weight: 600;
+        }
+        
+        .satisfaction-bar {
+            display: flex;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--border);
+            min-width: 100px;
+        }
+        
+        .satisfaction-bar .yes {
+            background: var(--accent-yes);
+        }
+        
+        .satisfaction-bar .no {
+            background: var(--accent-no);
+        }
+        
+        /* No data state */
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .no-data a {
+            color: var(--accent-yes);
+        }
+        
+        /* Best/Worst years */
+        .highlights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .highlight-card {
+            background: var(--bg-cream);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .highlight-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+        
+        .highlight-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .highlight-value.best { color: var(--accent-yes); }
+        .highlight-value.worst { color: var(--accent-no); }
+        
+        @media (max-width: 600px) {
+            .summary-grid { grid-template-columns: 1fr 1fr; }
+            .highlights { grid-template-columns: 1fr; }
+            .chart-section { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to rating</a>
+        
+        <header>
+            <h1>Your Reading Satisfaction</h1>
+            <p class="subtitle">How well did you choose your books?</p>
+        </header>
+        
+        <div id="content">
+            <div class="no-data">
+                <p>Loading your data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Data Loading
+        // ============================================
+        async function loadData() {
+            // Load books
+            const booksResponse = await fetch('data/books.json');
+            if (!booksResponse.ok) throw new Error('No books data found');
+            const books = await booksResponse.json();
+            
+            // Load ratings from localStorage
+            const ratingsStr = localStorage.getItem('bookSatisfactionRatings');
+            if (!ratingsStr) throw new Error('No ratings found');
+            const ratings = JSON.parse(ratingsStr);
+            
+            return { books, ratings };
+        }
+        
+        // ============================================
+        // Data Processing
+        // ============================================
+        function processData(books, ratings) {
+            // Group by year
+            const byYear = {};
+            
+            books.forEach(book => {
+                const year = book.year_read;
+                const rating = ratings[book.id];
+                
+                if (!byYear[year]) {
+                    byYear[year] = { total: 0, yes: 0, no: 0, skip: 0, unrated: 0 };
+                }
+                
+                byYear[year].total++;
+                
+                if (rating === 'yes') byYear[year].yes++;
+                else if (rating === 'no') byYear[year].no++;
+                else if (rating === 'skip') byYear[year].skip++;
+                else byYear[year].unrated++;
+            });
+            
+            // Calculate totals
+            const totalYes = Object.values(byYear).reduce((sum, y) => sum + y.yes, 0);
+            const totalNo = Object.values(byYear).reduce((sum, y) => sum + y.no, 0);
+            const totalBooks = books.length;
+            const totalRated = totalYes + totalNo;
+            const overallSatisfaction = totalRated > 0 ? (totalYes / totalRated * 100) : 0;
+            
+            // Find best/worst years (min 3 books rated)
+            const yearsWithEnoughData = Object.entries(byYear)
+                .filter(([_, data]) => (data.yes + data.no) >= 3)
+                .map(([year, data]) => ({
+                    year: parseInt(year),
+                    satisfaction: (data.yes / (data.yes + data.no)) * 100,
+                    rated: data.yes + data.no
+                }));
+            
+            let bestYear = null, worstYear = null;
+            if (yearsWithEnoughData.length > 0) {
+                bestYear = yearsWithEnoughData.reduce((best, curr) => 
+                    curr.satisfaction > best.satisfaction ? curr : best
+                );
+                worstYear = yearsWithEnoughData.reduce((worst, curr) => 
+                    curr.satisfaction < worst.satisfaction ? curr : worst
+                );
+            }
+            
+            return {
+                byYear,
+                totalYes,
+                totalNo,
+                totalBooks,
+                totalRated,
+                overallSatisfaction,
+                bestYear,
+                worstYear,
+                years: Object.keys(byYear).map(Number).sort((a, b) => a - b)
+            };
+        }
+        
+        // ============================================
+        // Rendering
+        // ============================================
+        function render(data) {
+            const { byYear, totalYes, totalNo, totalBooks, totalRated, overallSatisfaction, bestYear, worstYear, years } = data;
+            
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <!-- Summary Cards -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-value positive">${Math.round(overallSatisfaction)}%</div>
+                        <div class="summary-label">Overall Satisfaction</div>
+                        <div class="summary-detail">${totalYes} satisfied / ${totalRated} rated</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${totalBooks}</div>
+                        <div class="summary-label">Books Read</div>
+                        <div class="summary-detail">${years[0]} – ${years[years.length - 1]}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value positive">${totalYes}</div>
+                        <div class="summary-label">Satisfying Reads</div>
+                        <div class="summary-detail">Worth it</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value negative">${totalNo}</div>
+                        <div class="summary-label">Unsatisfying Reads</div>
+                        <div class="summary-detail">Would skip</div>
+                    </div>
+                </div>
+                
+                <!-- Main Chart -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Reading Volume & Satisfaction by Year</h2>
+                    <p class="chart-description">
+                        Bars show total books read. Line shows satisfaction rate (% of rated books you were satisfied with).
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    
+                    ${bestYear && worstYear ? `
+                    <div class="highlights">
+                        <div class="highlight-card">
+                            <div class="highlight-label">Best Year</div>
+                            <div class="highlight-value best">${bestYear.year}</div>
+                            <div class="summary-detail">${Math.round(bestYear.satisfaction)}% satisfaction (${bestYear.rated} books)</div>
+                        </div>
+                        <div class="highlight-card">
+                            <div class="highlight-label">Room for Improvement</div>
+                            <div class="highlight-value worst">${worstYear.year}</div>
+                            <div class="summary-detail">${Math.round(worstYear.satisfaction)}% satisfaction (${worstYear.rated} books)</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Breakdown Table -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Year by Year Breakdown</h2>
+                    <table class="year-table">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Books</th>
+                                <th>Satisfied</th>
+                                <th>Unsatisfied</th>
+                                <th>Rate</th>
+                                <th style="width: 150px;">Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${years.map(year => {
+                                const d = byYear[year];
+                                const rated = d.yes + d.no;
+                                const rate = rated > 0 ? Math.round((d.yes / rated) * 100) : '-';
+                                const yesWidth = rated > 0 ? (d.yes / rated) * 100 : 0;
+                                const noWidth = rated > 0 ? (d.no / rated) * 100 : 0;
+                                
+                                return `
+                                <tr>
+                                    <td class="year-col">${year}</td>
+                                    <td>${d.total}</td>
+                                    <td>${d.yes}</td>
+                                    <td>${d.no}</td>
+                                    <td>${rate}${rate !== '-' ? '%' : ''}</td>
+                                    <td>
+                                        <div class="satisfaction-bar">
+                                            <div class="yes" style="width: ${yesWidth}%"></div>
+                                            <div class="no" style="width: ${noWidth}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // Create the chart
+            createChart(years, byYear);
+        }
+        
+        function createChart(years, byYear) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            const bookCounts = years.map(y => byYear[y].total);
+            const satisfactionRates = years.map(y => {
+                const d = byYear[y];
+                const rated = d.yes + d.no;
+                return rated > 0 ? (d.yes / rated) * 100 : null;
+            });
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Books Read',
+                            data: bookCounts,
+                            backgroundColor: 'rgba(45, 42, 38, 0.15)',
+                            borderColor: 'rgba(45, 42, 38, 0.3)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'line',
+                            label: 'Satisfaction %',
+                            data: satisfactionRates,
+                            borderColor: '#3D8B6E',
+                            backgroundColor: 'rgba(61, 139, 110, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#3D8B6E',
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y1',
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { family: "'DM Sans', sans-serif" },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.label === 'Satisfaction %') {
+                                        return context.raw !== null 
+                                            ? `Satisfaction: ${Math.round(context.raw)}%`
+                                            : 'Not enough data';
+                                    }
+                                    return `Books: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: "'DM Sans', sans-serif" }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Books Read',
+                                font: { family: "'DM Sans', sans-serif" }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                font: { family: "'DM Sans', sans-serif" }
+                            },
+                            beginAtZero: true
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Satisfaction %',
+                                font: { family: "'DM Sans', sans-serif" }
+                            },
+                            min: 0,
+                            max: 100,
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: "'DM Sans', sans-serif" },
+                                callback: value => value + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderError(message) {
+            document.getElementById('content').innerHTML = `
+                <div class="no-data">
+                    <h2>No data yet</h2>
+                    <p>${message}</p>
+                    <p style="margin-top: 1rem;">
+                        <a href="index.html">Go rate some books →</a>
+                    </p>
+                </div>
+            `;
+        }
+        
+        // ============================================
+        // Initialize
+        // ============================================
+        async function init() {
+            try {
+                const { books, ratings } = await loadData();
+                
+                // Check if we have any ratings
+                const ratedCount = Object.values(ratings).filter(r => r === 'yes' || r === 'no').length;
+                if (ratedCount === 0) {
+                    throw new Error('No books have been rated yet.');
+                }
+                
+                const processed = processData(books, ratings);
+                render(processed);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                renderError(error.message);
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>

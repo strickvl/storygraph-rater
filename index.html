@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1612">
+    <title>Book Satisfaction</title>
+
+    <!-- Fonts: Playfair Display for literary elegance, Newsreader for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #1a1612;
+            --bg-card: #f5f0e8;
+            --bg-card-alt: #ebe4d8;
+            --text-dark: #1a1612;
+            --text-medium: #4a443c;
+            --text-light: #8a8378;
+            --text-on-dark: #e8e2d8;
+            --accent-yes: #2d6b4f;
+            --accent-yes-glow: rgba(45, 107, 79, 0.4);
+            --accent-no: #8b3a3a;
+            --accent-no-glow: rgba(139, 58, 58, 0.4);
+            --gold: #b8956c;
+            --gold-light: rgba(184, 149, 108, 0.15);
+            --paper-shadow: rgba(26, 22, 18, 0.25);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body {
+            font-family: 'Newsreader', Georgia, serif;
+            background: var(--bg-deep);
+            color: var(--text-on-dark);
+            display: flex;
+            flex-direction: column;
+            padding: calc(var(--safe-top) + 1rem) 1.25rem calc(var(--safe-bottom) + 0.5rem);
+            position: relative;
+        }
+
+        /* Subtle paper texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.75rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            color: var(--text-on-dark);
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 2px;
+            background: var(--gold);
+            margin: 0.5rem auto 0;
+            border-radius: 1px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-style: italic;
+            margin-top: 0.4rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto 1rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        .progress-stats {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold) 0%, #d4b896 100%);
+            border-radius: 2px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+
+        .progress-text {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Card Container */
+        .card-container {
+            flex: 1;
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Book Card */
+        .book-card {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            max-height: 520px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--bg-card);
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transform-origin: center bottom;
+            transition: transform 0.08s ease-out, box-shadow 0.2s ease;
+            will-change: transform;
+
+            /* Layered paper shadow */
+            box-shadow:
+                0 1px 1px var(--paper-shadow),
+                0 2px 2px var(--paper-shadow),
+                0 4px 4px var(--paper-shadow),
+                0 8px 8px var(--paper-shadow),
+                0 16px 32px var(--paper-shadow);
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold) 0%, #c9a87c 50%, var(--gold) 100%);
+            z-index: 10;
+        }
+
+        .book-card:active {
+            cursor: grabbing;
+        }
+
+        .book-card.animating {
+            transition: transform 0.45s cubic-bezier(0.2, 0, 0, 1), opacity 0.45s ease-out;
+        }
+
+        .book-card.exiting-yes {
+            transform: translateX(120%) rotate(15deg);
+            opacity: 0;
+        }
+
+        .book-card.exiting-no {
+            transform: translateX(-120%) rotate(-15deg);
+            opacity: 0;
+        }
+
+        .book-card.exiting-skip {
+            transform: translateY(30%) scale(0.9);
+            opacity: 0;
+        }
+
+        .book-card.entering {
+            opacity: 0;
+            transform: scale(0.96) translateY(10px);
+        }
+
+        /* Cover Image */
+        .book-cover {
+            position: absolute;
+            top: 4px;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(145deg, var(--bg-card-alt) 0%, var(--bg-card) 100%);
+            overflow: hidden;
+        }
+
+        .book-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: saturate(0.95);
+        }
+
+        .book-cover .placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            opacity: 0.2;
+        }
+
+        /* Book Info Panel */
+        .book-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 1.25rem 1.25rem;
+            background: var(--bg-card);
+            min-height: 30%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            /* Deckled edge effect */
+            border-top: 1px solid var(--bg-card-alt);
+        }
+
+        .book-info::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 16px;
+            background: var(--bg-card);
+            border-radius: 0 0 30px 30px;
+            border: 1px solid var(--bg-card-alt);
+            border-top: none;
+        }
+
+        .book-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.2rem;
+            font-weight: 400;
+            line-height: 1.35;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
+
+            /* Clamp to 3 lines */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .book-author {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            font-style: italic;
+        }
+
+        /* Swipe Overlays */
+        .swipe-overlay {
+            position: absolute;
+            top: 4px;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .swipe-overlay.yes {
+            background: radial-gradient(ellipse at center, var(--accent-yes-glow) 0%, transparent 70%);
+        }
+
+        .swipe-overlay.no {
+            background: radial-gradient(ellipse at center, var(--accent-no-glow) 0%, transparent 70%);
+        }
+
+        .swipe-label {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            padding: 0.6rem 1.5rem;
+            border: 3px solid;
+            border-radius: 4px;
+            transform: rotate(-12deg);
+            background: var(--bg-card);
+        }
+
+        .swipe-overlay.yes .swipe-label {
+            color: var(--accent-yes);
+            border-color: var(--accent-yes);
+            box-shadow: 0 0 30px var(--accent-yes-glow);
+        }
+
+        .swipe-overlay.no .swipe-label {
+            color: var(--accent-no);
+            border-color: var(--accent-no);
+            box-shadow: 0 0 30px var(--accent-no-glow);
+        }
+
+        /* Action Buttons */
+        .button-row {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            align-items: center;
+            padding: 1.25rem 0 0.5rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .btn-action {
+            width: 64px;
+            height: 64px;
+            background: var(--bg-card);
+            box-shadow:
+                0 2px 4px var(--paper-shadow),
+                0 4px 8px var(--paper-shadow);
+        }
+
+        .btn-action::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.08);
+        }
+
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .btn-no {
+            color: var(--accent-no);
+        }
+        .btn-no:hover::after {
+            border-color: var(--accent-no);
+        }
+
+        .btn-yes {
+            color: var(--accent-yes);
+        }
+        .btn-yes:hover::after {
+            border-color: var(--accent-yes);
+        }
+
+        .btn-skip {
+            width: 48px;
+            height: 48px;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.15);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .btn-skip:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: var(--text-on-dark);
+        }
+
+        /* Keyboard hints (desktop) */
+        .keyboard-hints {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            padding-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        kbd {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 0.65rem;
+            margin: 0 0.1rem;
+        }
+
+        @media (hover: none) {
+            .keyboard-hints { display: none; }
+        }
+
+        /* Swipe hint for mobile */
+        .swipe-hint {
+            display: none;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            padding-bottom: 0.5rem;
+            letter-spacing: 0.03em;
+        }
+
+        @media (hover: none) {
+            .swipe-hint { display: block; }
+        }
+
+        /* Completion state */
+        .completion {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            background: var(--bg-card);
+            border-radius: 4px;
+            position: relative;
+
+            box-shadow:
+                0 2px 4px var(--paper-shadow),
+                0 4px 8px var(--paper-shadow),
+                0 8px 16px var(--paper-shadow);
+        }
+
+        .completion::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold) 0%, #c9a87c 50%, var(--gold) 100%);
+        }
+
+        .completion h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .completion > p {
+            color: var(--text-medium);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .completion .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: var(--bg-card-alt);
+            padding: 1rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .btn-rect {
+            display: block;
+            width: 100%;
+            padding: 0.9rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 0.6rem;
+        }
+
+        .btn-view {
+            background: var(--accent-yes);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #245a42;
+        }
+
+        .btn-export {
+            background: var(--text-dark);
+            color: var(--bg-card);
+        }
+
+        .btn-export:hover {
+            background: var(--text-medium);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--bg-card-alt);
+        }
+
+        .btn-reset:hover {
+            border-color: var(--text-light);
+            color: var(--text-medium);
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .loading-spinner {
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error state */
+        .error {
+            background: var(--bg-card);
+            border-radius: 4px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .error::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-no);
+        }
+
+        .error h2 {
+            color: var(--accent-no);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            font-family: 'Playfair Display', Georgia, serif;
+        }
+
+        .error p {
+            color: var(--text-medium);
+        }
+
+        .error code {
+            display: block;
+            background: var(--bg-card-alt);
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.7rem;
+            text-align: left;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-dark);
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 400px) {
+            body { padding-left: 1.5rem; padding-right: 1.5rem; }
+            h1 { font-size: 2rem; }
+            .book-card { max-height: 560px; }
+            .book-title { font-size: 1.35rem; }
+        }
+
+        @media (min-height: 750px) {
+            .book-card { max-height: 580px; }
+            .button-row { padding: 1.5rem 0 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Book Satisfaction</h1>
+        <p class="subtitle">Was it worth your time?</p>
+    </header>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="progress-label">Progress</span>
+            <span class="progress-stats" id="progress-stats">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="confidence-fill"></div>
+        </div>
+        <p class="progress-text" id="confidence-text">Loading your library...</p>
+    </div>
+
+    <div class="card-container" id="card-container">
+        <div class="loading" id="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading books...</p>
+        </div>
+    </div>
+
+    <div class="button-row" id="button-row">
+        <button class="btn btn-action btn-no" onclick="rate('no')" title="Not satisfied" aria-label="Not satisfied">✗</button>
+        <button class="btn btn-skip" onclick="rate('skip')" title="Skip" aria-label="Skip">↓</button>
+        <button class="btn btn-action btn-yes" onclick="rate('yes')" title="Satisfied" aria-label="Satisfied">✓</button>
+    </div>
+
+    <p class="keyboard-hints">
+        <kbd>←</kbd> No <kbd>↓</kbd> Skip <kbd>→</kbd> Yes
+    </p>
+
+    <p class="swipe-hint">
+        ← swipe left · swipe right →
+    </p>
+
+    <script>
+        // ============================================
+        // State Management
+        // ============================================
+        const state = {
+            books: [],
+            ratings: {},
+            currentIndex: 0,
+            shuffledOrder: [],
+            isAnimating: false,
+            isDragging: false,
+            startX: 0,
+            startY: 0,
+            currentX: 0,
+            currentY: 0
+        };
+
+        const SWIPE_THRESHOLD = 80;
+        const ROTATION_FACTOR = 0.08;
+        const OPACITY_FACTOR = 0.012;
+
+        async function loadRatings() {
+            // Try to load from server first (file-based), fall back to localStorage
+            try {
+                const response = await fetch('data/ratings.json');
+                if (response.ok) {
+                    state.ratings = await response.json();
+                    console.log(`Loaded ${Object.keys(state.ratings).length} ratings from server`);
+                    return;
+                }
+            } catch (e) {
+                console.log('No server ratings file, checking localStorage...');
+            }
+
+            // Fallback to localStorage
+            const saved = localStorage.getItem('bookSatisfactionRatings');
+            if (saved) {
+                try {
+                    state.ratings = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load ratings:', e);
+                    state.ratings = {};
+                }
+            }
+        }
+
+        function saveRatings(bookId, rating) {
+            // Save to localStorage as backup
+            localStorage.setItem('bookSatisfactionRatings', JSON.stringify(state.ratings));
+
+            // Save to server (writes to data/ratings.json)
+            fetch('/api/rate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ book_id: bookId, rating: rating })
+            }).catch(err => console.warn('Could not save to server:', err));
+        }
+
+        // ============================================
+        // Confidence Calculation
+        // ============================================
+        function calculateConfidence() {
+            const total = state.books.length;
+            const rated = Object.keys(state.ratings).filter(id =>
+                state.ratings[id] === 'yes' || state.ratings[id] === 'no'
+            ).length;
+
+            if (total === 0) return { percent: 0, rated, total, interpretation: 'No books loaded' };
+
+            const percent = (rated / total) * 100;
+
+            let interpretation;
+            if (rated === 0) {
+                interpretation = 'Rate some books to begin';
+            } else if (rated < 10) {
+                interpretation = 'Just getting started...';
+            } else if (percent < 20) {
+                interpretation = 'Building your dataset';
+            } else if (percent < 40) {
+                interpretation = 'Patterns emerging';
+            } else if (percent < 60) {
+                interpretation = 'Good statistical sample';
+            } else if (percent < 80) {
+                interpretation = 'Strong confidence level';
+            } else {
+                interpretation = 'Comprehensive coverage';
+            }
+
+            return { percent, rated, total, interpretation };
+        }
+
+        function updateConfidenceDisplay() {
+            const { percent, rated, total, interpretation } = calculateConfidence();
+
+            document.getElementById('confidence-fill').style.width = `${percent}%`;
+            document.getElementById('progress-stats').textContent = `${rated} / ${total}`;
+            document.getElementById('confidence-text').textContent = interpretation;
+        }
+
+        // ============================================
+        // Shuffle & Navigation
+        // ============================================
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function getNextUnratedIndex() {
+            for (let i = 0; i < state.shuffledOrder.length; i++) {
+                const bookId = state.books[state.shuffledOrder[i]].id;
+                if (!state.ratings[bookId]) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // ============================================
+        // Rendering
+        // ============================================
+        function renderBookCard(book) {
+            const coverHtml = book.cover_url
+                ? `<img src="${book.cover_url}" alt="" loading="eager" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                   <span class="placeholder" style="display:none;">📖</span>`
+                : `<span class="placeholder">📖</span>`;
+
+            return `
+                <div class="book-card entering" id="current-card">
+                    <div class="book-cover">
+                        ${coverHtml}
+                    </div>
+
+                    <div class="swipe-overlay yes" id="overlay-yes">
+                        <span class="swipe-label">Yes</span>
+                    </div>
+                    <div class="swipe-overlay no" id="overlay-no">
+                        <span class="swipe-label">No</span>
+                    </div>
+
+                    <div class="book-info">
+                        <h2 class="book-title">${escapeHtml(book.title)}</h2>
+                        <p class="book-author">${escapeHtml(book.authors)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCompletion() {
+            const { rated, total } = calculateConfidence();
+            const yesCount = Object.values(state.ratings).filter(r => r === 'yes').length;
+            const noCount = Object.values(state.ratings).filter(r => r === 'no').length;
+            const satisfactionRate = (yesCount + noCount) > 0 ? Math.round((yesCount / (yesCount + noCount)) * 100) : 0;
+
+            document.getElementById('button-row').style.display = 'none';
+            document.querySelector('.keyboard-hints')?.style.setProperty('display', 'none');
+            document.querySelector('.swipe-hint')?.style.setProperty('display', 'none');
+
+            return `
+                <div class="completion">
+                    <h2>All Done</h2>
+                    <p>You've rated every book in your library.</p>
+
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value">${yesCount}</div>
+                            <div class="stat-label">Satisfied</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${noCount}</div>
+                            <div class="stat-label">Regrets</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${satisfactionRate}%</div>
+                            <div class="stat-label">Hit Rate</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-rect btn-view" onclick="window.location.href='visualization.html'">
+                        View Analysis →
+                    </button>
+                    <button class="btn-rect btn-export" onclick="exportData()">
+                        Export Data
+                    </button>
+                    <button class="btn-rect btn-reset" onclick="resetRatings()">
+                        Start Over
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderError(message) {
+            document.getElementById('button-row').style.display = 'none';
+
+            return `
+                <div class="error">
+                    <h2>Couldn't Load Books</h2>
+                    <p>${message}</p>
+                    <code>1. Export from StoryGraph
+   (Manage Account → Export)
+
+2. Run the processing script:
+   uv run process_csv.py data/export.csv
+
+3. Refresh this page</code>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // Touch/Drag Handling
+        // ============================================
+        function setupTouchHandlers() {
+            const container = document.getElementById('card-container');
+
+            container.addEventListener('touchstart', handleDragStart, { passive: false });
+            container.addEventListener('touchmove', handleDragMove, { passive: false });
+            container.addEventListener('touchend', handleDragEnd);
+            container.addEventListener('touchcancel', handleDragEnd);
+
+            container.addEventListener('mousedown', handleDragStart);
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
+        }
+
+        function handleDragStart(e) {
+            if (state.isAnimating) return;
+
+            const card = document.getElementById('current-card');
+            if (!card || card.classList.contains('completion')) return;
+
+            state.isDragging = true;
+
+            const point = e.touches ? e.touches[0] : e;
+            state.startX = point.clientX;
+            state.startY = point.clientY;
+            state.currentX = 0;
+            state.currentY = 0;
+
+            card.style.transition = 'none';
+        }
+
+        function handleDragMove(e) {
+            if (!state.isDragging) return;
+
+            const card = document.getElementById('current-card');
+            if (!card) return;
+
+            const point = e.touches ? e.touches[0] : e;
+            state.currentX = point.clientX - state.startX;
+            state.currentY = point.clientY - state.startY;
+
+            const rotation = state.currentX * ROTATION_FACTOR;
+            const scale = 1 - Math.abs(state.currentX) * 0.0002;
+
+            card.style.transform = `translateX(${state.currentX}px) translateY(${state.currentY * 0.2}px) rotate(${rotation}deg) scale(${scale})`;
+
+            const yesOverlay = document.getElementById('overlay-yes');
+            const noOverlay = document.getElementById('overlay-no');
+
+            if (yesOverlay && noOverlay) {
+                if (state.currentX > 0) {
+                    yesOverlay.style.opacity = Math.min(state.currentX * OPACITY_FACTOR, 1);
+                    noOverlay.style.opacity = 0;
+                } else {
+                    noOverlay.style.opacity = Math.min(-state.currentX * OPACITY_FACTOR, 1);
+                    yesOverlay.style.opacity = 0;
+                }
+            }
+
+            if (Math.abs(state.currentX) > 10) {
+                e.preventDefault();
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (!state.isDragging) return;
+            state.isDragging = false;
+
+            const card = document.getElementById('current-card');
+            if (!card) return;
+
+            if (state.currentX > SWIPE_THRESHOLD) {
+                rate('yes');
+            } else if (state.currentX < -SWIPE_THRESHOLD) {
+                rate('no');
+            } else {
+                card.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.transform = 'translateX(0) translateY(0) rotate(0deg) scale(1)';
+
+                const yesOverlay = document.getElementById('overlay-yes');
+                const noOverlay = document.getElementById('overlay-no');
+                if (yesOverlay) yesOverlay.style.opacity = 0;
+                if (noOverlay) noOverlay.style.opacity = 0;
+            }
+        }
+
+        // ============================================
+        // Actions
+        // ============================================
+        function rate(value) {
+            if (state.isAnimating) return;
+
+            const currentShuffledIndex = state.currentIndex;
+            if (currentShuffledIndex >= state.shuffledOrder.length) return;
+
+            const bookIndex = state.shuffledOrder[currentShuffledIndex];
+            const book = state.books[bookIndex];
+
+            state.isAnimating = true;
+            state.isDragging = false;
+
+            state.ratings[book.id] = value;
+            saveRatings(book.id, value);
+            updateConfidenceDisplay();
+
+            const card = document.getElementById('current-card');
+            if (card) {
+                card.classList.add('animating');
+
+                if (value === 'yes') {
+                    const overlay = document.getElementById('overlay-yes');
+                    if (overlay) overlay.style.opacity = 1;
+                } else if (value === 'no') {
+                    const overlay = document.getElementById('overlay-no');
+                    if (overlay) overlay.style.opacity = 1;
+                }
+
+                setTimeout(() => {
+                    if (value === 'yes') card.classList.add('exiting-yes');
+                    else if (value === 'no') card.classList.add('exiting-no');
+                    else card.classList.add('exiting-skip');
+                }, 60);
+            }
+
+            setTimeout(() => {
+                const nextIndex = getNextUnratedIndex();
+
+                if (nextIndex === -1) {
+                    document.getElementById('card-container').innerHTML = renderCompletion();
+                } else {
+                    state.currentIndex = nextIndex;
+                    const nextBook = state.books[state.shuffledOrder[nextIndex]];
+                    document.getElementById('card-container').innerHTML = renderBookCard(nextBook);
+
+                    requestAnimationFrame(() => {
+                        const newCard = document.getElementById('current-card');
+                        if (newCard) {
+                            newCard.classList.remove('entering');
+                        }
+                    });
+                }
+
+                state.isAnimating = false;
+            }, 380);
+        }
+
+        function exportData() {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                summary: calculateConfidence(),
+                ratings: state.books.map(book => ({
+                    ...book,
+                    satisfaction: state.ratings[book.id] || 'unrated'
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `book-satisfaction-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetRatings() {
+            if (confirm('This will clear all your ratings. Continue?')) {
+                state.ratings = {};
+                localStorage.removeItem('bookSatisfactionRatings');
+                state.shuffledOrder = shuffleArray([...Array(state.books.length).keys()]);
+                state.currentIndex = 0;
+                updateConfidenceDisplay();
+
+                document.getElementById('button-row').style.display = 'flex';
+
+                const book = state.books[state.shuffledOrder[0]];
+                document.getElementById('card-container').innerHTML = renderBookCard(book);
+                requestAnimationFrame(() => {
+                    document.getElementById('current-card')?.classList.remove('entering');
+                });
+            }
+        }
+
+        // ============================================
+        // Keyboard Controls
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key.toLowerCase()) {
+                case 'y':
+                case 'arrowright':
+                    rate('yes');
+                    break;
+                case 'n':
+                case 'arrowleft':
+                    rate('no');
+                    break;
+                case 's':
+                case 'arrowdown':
+                    rate('skip');
+                    break;
+            }
+        });
+
+        // ============================================
+        // Utility
+        // ============================================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // Initialization
+        // ============================================
+        async function init() {
+            await loadRatings();
+            setupTouchHandlers();
+
+            try {
+                const response = await fetch('data/books.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                state.books = await response.json();
+
+                if (!Array.isArray(state.books) || state.books.length === 0) {
+                    throw new Error('No books found in data file');
+                }
+
+                state.shuffledOrder = shuffleArray([...Array(state.books.length).keys()]);
+
+                const startIndex = getNextUnratedIndex();
+
+                updateConfidenceDisplay();
+
+                if (startIndex === -1) {
+                    document.getElementById('card-container').innerHTML = renderCompletion();
+                } else {
+                    state.currentIndex = startIndex;
+                    const book = state.books[state.shuffledOrder[startIndex]];
+                    document.getElementById('card-container').innerHTML = renderBookCard(book);
+
+                    requestAnimationFrame(() => {
+                        document.getElementById('current-card')?.classList.remove('entering');
+                    });
+                }
+
+            } catch (error) {
+                console.error('Failed to load books:', error);
+                document.getElementById('card-container').innerHTML = renderError(
+                    `Could not load books.json: ${error.message}`
+                );
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
