@@ -74,6 +74,16 @@ cloudflared tunnel --url http://localhost:8000
 
 Once you've rated some books, click "View Charts" or go to `visualization.html`.
 
+![Visualization Demo](assets/visualization-demo.gif)
+
+The visualization page shows:
+- **Overall satisfaction rate** and key stats
+- **Year-by-year trends** with volume overlay
+- **Reading heatmap** showing satisfaction patterns across weeks
+- **Cumulative satisfaction** tracking your pick-rate over time
+- **Streak analysis** — your longest runs of hits and misses
+- **Author loyalty** — which frequently-read authors satisfied you most
+
 ## Files
 
 ```

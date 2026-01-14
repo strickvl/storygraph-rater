@@ -56,8 +56,21 @@ cloudflared tunnel --url http://localhost:8000
 ## Frontend State
 
 Both HTML files share state via:
-- `data/books.json` — book metadata (title, author, year, ISBN, cover_url)
+- `data/books.json` — book metadata (title, author, year, ISBN, cover_url, date_read)
 - `data/ratings.json` — ratings saved to disk on every rating
 - `localStorage.bookSatisfactionRatings` — backup fallback for ratings
 
 The rating interface shuffles book order to prevent temporal bias.
+
+## Visualization Page
+
+`visualization.html` uses Chart.js with the date-fns adapter for time-based charts. Key features:
+
+- **MIN_YEAR config**: Set `const MIN_YEAR = 2012;` at top of script to filter all charts/stats to a specific year range
+- **Summary cards**: Total books, satisfaction %, best/worst years (all respect MIN_YEAR)
+- **Year-by-year chart**: Bar chart (volume) + line (satisfaction %) overlay
+- **Heatmap**: GitHub-style grid showing satisfaction by week across years (flex-based, full-width)
+- **Cumulative satisfaction**: Time-scale line chart tracking rolling satisfaction rate
+- **Streak analysis**: Longest runs of satisfied/unsatisfied reads with human-readable dates
+- **Volume vs Pickiness**: Scatter plot correlating reading volume with satisfaction
+- **Author loyalty**: Cards showing satisfaction rates for frequently-read authors (3+ books)

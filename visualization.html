@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reading Satisfaction — Results</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js -->
+
+    <!-- Chart.js + date adapter for time scales -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
     <style>
         :root {
             --bg-cream: #F9F6F1;
@@ -22,16 +23,17 @@
             --text-muted: #9E9891;
             --accent-yes: #3D8B6E;
             --accent-no: #C4756B;
+            --accent-neutral: #7B8794;
             --border: #E8E4DE;
             --shadow: rgba(45, 42, 38, 0.08);
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'DM Sans', system-ui, sans-serif;
             background: var(--bg-cream);
@@ -39,28 +41,28 @@
             min-height: 100vh;
             padding: 2rem 1rem;
         }
-        
+
         .container {
             max-width: 900px;
             margin: 0 auto;
         }
-        
+
         header {
             text-align: center;
             margin-bottom: 2rem;
         }
-        
+
         h1 {
             font-family: 'Libre Baskerville', Georgia, serif;
             font-size: 2rem;
             font-weight: 400;
             margin-bottom: 0.5rem;
         }
-        
+
         .subtitle {
             color: var(--text-secondary);
         }
-        
+
         .back-link {
             display: inline-block;
             margin-bottom: 1rem;
@@ -68,11 +70,35 @@
             text-decoration: none;
             font-size: 0.9rem;
         }
-        
+
         .back-link:hover {
             color: var(--text-primary);
         }
-        
+
+        /* Section Divider */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            margin: 3rem 0 2rem;
+            gap: 1rem;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .section-divider span {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
         /* Summary Cards */
         .summary-grid {
             display: grid;
@@ -80,35 +106,35 @@
             gap: 1rem;
             margin-bottom: 2rem;
         }
-        
+
         .summary-card {
             background: var(--bg-card);
             border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 2px 12px var(--shadow);
         }
-        
+
         .summary-value {
             font-size: 2.5rem;
             font-weight: 600;
             line-height: 1;
         }
-        
+
         .summary-value.positive { color: var(--accent-yes); }
         .summary-value.negative { color: var(--accent-no); }
-        
+
         .summary-label {
             font-size: 0.9rem;
             color: var(--text-secondary);
             margin-top: 0.5rem;
         }
-        
+
         .summary-detail {
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-top: 0.25rem;
         }
-        
+
         /* Charts */
         .chart-section {
             background: var(--bg-card);
@@ -117,39 +143,43 @@
             margin-bottom: 2rem;
             box-shadow: 0 4px 20px var(--shadow);
         }
-        
+
         .chart-title {
             font-family: 'Libre Baskerville', Georgia, serif;
             font-size: 1.25rem;
             font-weight: 400;
             margin-bottom: 0.5rem;
         }
-        
+
         .chart-description {
             font-size: 0.9rem;
             color: var(--text-secondary);
             margin-bottom: 1.5rem;
         }
-        
+
         .chart-container {
             position: relative;
             height: 300px;
         }
-        
+
+        .chart-container.tall {
+            height: 400px;
+        }
+
         /* Year breakdown table */
         .year-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
         }
-        
+
         .year-table th,
         .year-table td {
             padding: 0.75rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
-        
+
         .year-table th {
             font-weight: 600;
             color: var(--text-secondary);
@@ -157,15 +187,15 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-        
+
         .year-table tbody tr:hover {
             background: var(--bg-cream);
         }
-        
+
         .year-table .year-col {
             font-weight: 600;
         }
-        
+
         .satisfaction-bar {
             display: flex;
             height: 8px;
@@ -174,26 +204,143 @@
             background: var(--border);
             min-width: 100px;
         }
-        
+
         .satisfaction-bar .yes {
             background: var(--accent-yes);
         }
-        
+
         .satisfaction-bar .no {
             background: var(--accent-no);
         }
-        
+
+        /* Author cards */
+        .author-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .author-card {
+            background: var(--bg-cream);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .author-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .author-stats {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .author-rate {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .author-rate.high { color: var(--accent-yes); }
+        .author-rate.low { color: var(--accent-no); }
+        .author-rate.medium { color: var(--accent-neutral); }
+
+        /* GitHub-style heatmap - horizontal layout, full width */
+        .heatmap-container {
+            padding: 1rem 0;
+        }
+
+        .heatmap-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .heatmap-month-labels {
+            display: flex;
+            margin-left: 36px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .heatmap-month-label {
+            text-align: left;
+            /* Flex-based width proportional to weeks in month */
+        }
+
+        .heatmap-year-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .heatmap-year-label {
+            width: 32px;
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .heatmap-weeks {
+            display: flex;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .heatmap-cell {
+            flex: 1;
+            height: 14px;
+            border-radius: 2px;
+            background: var(--border);
+        }
+
+        .heatmap-cell.satisfied { background: var(--accent-yes); }
+        .heatmap-cell.unsatisfied { background: var(--accent-no); }
+        .heatmap-cell.mixed { background: #D4A76A; }
+        .heatmap-cell.empty { background: var(--border); opacity: 0.3; }
+
+        .heatmap-cell[title] {
+            cursor: help;
+        }
+
+        .heatmap-legend {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .heatmap-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .heatmap-legend-item .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            flex: none;
+        }
+
         /* No data state */
         .no-data {
             text-align: center;
             padding: 3rem;
             color: var(--text-secondary);
         }
-        
+
         .no-data a {
             color: var(--accent-yes);
         }
-        
+
         /* Best/Worst years */
         .highlights {
             display: grid;
@@ -201,43 +348,77 @@
             gap: 1rem;
             margin-top: 1rem;
         }
-        
+
         .highlight-card {
             background: var(--bg-cream);
             padding: 1rem;
             border-radius: 8px;
         }
-        
+
         .highlight-label {
             font-size: 0.8rem;
             color: var(--text-muted);
             margin-bottom: 0.25rem;
         }
-        
+
         .highlight-value {
             font-size: 1.25rem;
             font-weight: 600;
         }
-        
+
         .highlight-value.best { color: var(--accent-yes); }
         .highlight-value.worst { color: var(--accent-no); }
-        
+
+        /* Streak display */
+        .streak-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .streak-card {
+            background: var(--bg-cream);
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .streak-value {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .streak-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .streak-detail {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
         @media (max-width: 600px) {
             .summary-grid { grid-template-columns: 1fr 1fr; }
             .highlights { grid-template-columns: 1fr; }
+            .streak-display { grid-template-columns: 1fr; }
             .chart-section { padding: 1.5rem; }
+            .author-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-link">← Back to rating</a>
-        
+
         <header>
             <h1>Your Reading Satisfaction</h1>
             <p class="subtitle">How well did you choose your books?</p>
         </header>
-        
+
         <div id="content">
             <div class="no-data">
                 <p>Loading your data...</p>
@@ -249,37 +430,27 @@
         // ============================================
         // Configuration
         // ============================================
-        // Set this to filter charts/tables to only show years from this point onwards
-        // Set to null to show all years
         const MIN_YEAR = 2012;
 
         // ============================================
         // Data Loading
         // ============================================
         async function loadData() {
-            // Load books
             const booksResponse = await fetch('data/books.json');
             if (!booksResponse.ok) throw new Error('No books data found');
             const books = await booksResponse.json();
 
-            // Load ratings - try server file first, fall back to localStorage
             let ratings = {};
             try {
                 const ratingsResponse = await fetch('data/ratings.json');
                 if (ratingsResponse.ok) {
                     ratings = await ratingsResponse.json();
-                    console.log(`Loaded ${Object.keys(ratings).length} ratings from server`);
                 }
-            } catch (e) {
-                console.log('No server ratings, checking localStorage...');
-            }
+            } catch (e) {}
 
-            // Fall back to localStorage if no server ratings
             if (Object.keys(ratings).length === 0) {
                 const ratingsStr = localStorage.getItem('bookSatisfactionRatings');
-                if (ratingsStr) {
-                    ratings = JSON.parse(ratingsStr);
-                }
+                if (ratingsStr) ratings = JSON.parse(ratingsStr);
             }
 
             if (Object.keys(ratings).length === 0) {
@@ -288,84 +459,156 @@
 
             return { books, ratings };
         }
-        
+
         // ============================================
         // Data Processing
         // ============================================
         function processData(books, ratings) {
             // Group by year
             const byYear = {};
-            
             books.forEach(book => {
                 const year = book.year_read;
                 const rating = ratings[book.id];
-                
-                if (!byYear[year]) {
-                    byYear[year] = { total: 0, yes: 0, no: 0, skip: 0, unrated: 0 };
-                }
-                
+                if (!byYear[year]) byYear[year] = { total: 0, yes: 0, no: 0, skip: 0, unrated: 0, books: [] };
                 byYear[year].total++;
-                
+                byYear[year].books.push({ ...book, rating });
                 if (rating === 'yes') byYear[year].yes++;
                 else if (rating === 'no') byYear[year].no++;
                 else if (rating === 'skip') byYear[year].skip++;
                 else byYear[year].unrated++;
             });
-            
-            // Calculate totals
-            const totalYes = Object.values(byYear).reduce((sum, y) => sum + y.yes, 0);
-            const totalNo = Object.values(byYear).reduce((sum, y) => sum + y.no, 0);
-            const totalBooks = books.length;
+
+            // Group by author
+            const byAuthor = {};
+            books.forEach(book => {
+                const author = book.authors;
+                const rating = ratings[book.id];
+                if (!byAuthor[author]) byAuthor[author] = { total: 0, yes: 0, no: 0, books: [] };
+                byAuthor[author].total++;
+                byAuthor[author].books.push(book.title);
+                if (rating === 'yes') byAuthor[author].yes++;
+                else if (rating === 'no') byAuthor[author].no++;
+            });
+
+            // Group by date for heatmap
+            const byDate = {};
+            books.forEach(book => {
+                if (!book.date_read) return;
+                const date = book.date_read;
+                const rating = ratings[book.id];
+                if (!byDate[date]) byDate[date] = { yes: 0, no: 0, books: [] };
+                byDate[date].books.push(book.title);
+                if (rating === 'yes') byDate[date].yes++;
+                else if (rating === 'no') byDate[date].no++;
+            });
+
+            const allYears = Object.keys(byYear).map(Number).sort((a, b) => a - b);
+            const displayYears = MIN_YEAR ? allYears.filter(y => y >= MIN_YEAR) : allYears;
+
+            // Calculate totals (filtered by MIN_YEAR if set)
+            const filteredByYear = MIN_YEAR
+                ? Object.fromEntries(Object.entries(byYear).filter(([y]) => parseInt(y) >= MIN_YEAR))
+                : byYear;
+            const totalYes = Object.values(filteredByYear).reduce((sum, y) => sum + y.yes, 0);
+            const totalNo = Object.values(filteredByYear).reduce((sum, y) => sum + y.no, 0);
+            const totalBooks = Object.values(filteredByYear).reduce((sum, y) => sum + y.total, 0);
             const totalRated = totalYes + totalNo;
             const overallSatisfaction = totalRated > 0 ? (totalYes / totalRated * 100) : 0;
-            
-            // Find best/worst years (min 3 books rated)
-            const yearsWithEnoughData = Object.entries(byYear)
+
+            // Find best/worst years (within display range)
+            const yearsWithEnoughData = Object.entries(filteredByYear)
                 .filter(([_, data]) => (data.yes + data.no) >= 3)
                 .map(([year, data]) => ({
                     year: parseInt(year),
                     satisfaction: (data.yes / (data.yes + data.no)) * 100,
                     rated: data.yes + data.no
                 }));
-            
+
             let bestYear = null, worstYear = null;
             if (yearsWithEnoughData.length > 0) {
-                bestYear = yearsWithEnoughData.reduce((best, curr) => 
-                    curr.satisfaction > best.satisfaction ? curr : best
-                );
-                worstYear = yearsWithEnoughData.reduce((worst, curr) => 
-                    curr.satisfaction < worst.satisfaction ? curr : worst
-                );
+                bestYear = yearsWithEnoughData.reduce((best, curr) => curr.satisfaction > best.satisfaction ? curr : best);
+                worstYear = yearsWithEnoughData.reduce((worst, curr) => curr.satisfaction < worst.satisfaction ? curr : worst);
             }
-            
-            // Get all years, then filter by MIN_YEAR for display
-            const allYears = Object.keys(byYear).map(Number).sort((a, b) => a - b);
-            const displayYears = MIN_YEAR
-                ? allYears.filter(y => y >= MIN_YEAR)
-                : allYears;
+
+            // Calculate streaks
+            const sortedBooks = books
+                .filter(b => b.date_read && (ratings[b.id] === 'yes' || ratings[b.id] === 'no'))
+                .map(b => ({ ...b, rating: ratings[b.id] }))
+                .sort((a, b) => a.date_read.localeCompare(b.date_read));
+
+            let maxSatisfiedStreak = 0, maxUnsatisfiedStreak = 0;
+            let currentSatisfiedStreak = 0, currentUnsatisfiedStreak = 0;
+            let satisfiedStreakEnd = null, unsatisfiedStreakEnd = null;
+
+            sortedBooks.forEach((book, i) => {
+                if (book.rating === 'yes') {
+                    currentSatisfiedStreak++;
+                    currentUnsatisfiedStreak = 0;
+                    if (currentSatisfiedStreak > maxSatisfiedStreak) {
+                        maxSatisfiedStreak = currentSatisfiedStreak;
+                        satisfiedStreakEnd = book.date_read;
+                    }
+                } else {
+                    currentUnsatisfiedStreak++;
+                    currentSatisfiedStreak = 0;
+                    if (currentUnsatisfiedStreak > maxUnsatisfiedStreak) {
+                        maxUnsatisfiedStreak = currentUnsatisfiedStreak;
+                        unsatisfiedStreakEnd = book.date_read;
+                    }
+                }
+            });
+
+            // Calculate cumulative satisfaction
+            let cumYes = 0, cumNo = 0;
+            const cumulativeData = sortedBooks.map(book => {
+                if (book.rating === 'yes') cumYes++;
+                else cumNo++;
+                return {
+                    date: book.date_read,
+                    satisfaction: cumYes + cumNo > 0 ? (cumYes / (cumYes + cumNo)) * 100 : 0,
+                    total: cumYes + cumNo
+                };
+            });
 
             return {
-                byYear,
-                totalYes,
-                totalNo,
-                totalBooks,
-                totalRated,
-                overallSatisfaction,
-                bestYear,
-                worstYear,
-                years: displayYears,
-                allYears
+                byYear, byAuthor, byDate,
+                totalYes, totalNo, totalBooks, totalRated, overallSatisfaction,
+                bestYear, worstYear,
+                years: displayYears, allYears,
+                maxSatisfiedStreak, maxUnsatisfiedStreak,
+                satisfiedStreakEnd, unsatisfiedStreakEnd,
+                cumulativeData, sortedBooks
             };
         }
-        
+
         // ============================================
         // Rendering
         // ============================================
         function render(data) {
-            const { byYear, totalYes, totalNo, totalBooks, totalRated, overallSatisfaction, bestYear, worstYear, years, allYears } = data;
-            
+            const {
+                byYear, byAuthor, byDate,
+                totalYes, totalNo, totalBooks, totalRated, overallSatisfaction,
+                bestYear, worstYear, years, allYears,
+                maxSatisfiedStreak, maxUnsatisfiedStreak,
+                satisfiedStreakEnd, unsatisfiedStreakEnd,
+                cumulativeData
+            } = data;
+
+            // Get loyal authors (3+ books read)
+            const loyalAuthors = Object.entries(byAuthor)
+                .filter(([_, data]) => data.total >= 3 && (data.yes + data.no) >= 2)
+                .map(([author, data]) => ({
+                    author,
+                    total: data.total,
+                    rated: data.yes + data.no,
+                    satisfaction: (data.yes / (data.yes + data.no)) * 100,
+                    books: data.books
+                }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 12);
+
             const content = document.getElementById('content');
-            
+
             content.innerHTML = `
                 <!-- Summary Cards -->
                 <div class="summary-grid">
@@ -377,7 +620,7 @@
                     <div class="summary-card">
                         <div class="summary-value">${totalBooks}</div>
                         <div class="summary-label">Books Read</div>
-                        <div class="summary-detail">${allYears[0]} – ${allYears[allYears.length - 1]}</div>
+                        <div class="summary-detail">${years[0]} – ${years[years.length - 1]}</div>
                     </div>
                     <div class="summary-card">
                         <div class="summary-value positive">${totalYes}</div>
@@ -390,34 +633,129 @@
                         <div class="summary-detail">Would skip</div>
                     </div>
                 </div>
-                
+
                 <!-- Main Chart -->
                 <div class="chart-section">
                     <h2 class="chart-title">Reading Volume & Satisfaction by Year</h2>
                     <p class="chart-description">
-                        Bars show total books read. Line shows satisfaction rate (% of rated books you were satisfied with).
+                        Bars show total books read. Line shows satisfaction rate.
                         ${MIN_YEAR ? `<em>Showing ${MIN_YEAR} onwards.</em>` : ''}
                     </p>
                     <div class="chart-container">
                         <canvas id="mainChart"></canvas>
                     </div>
-                    
                     ${bestYear && worstYear ? `
                     <div class="highlights">
                         <div class="highlight-card">
                             <div class="highlight-label">Best Year</div>
                             <div class="highlight-value best">${bestYear.year}</div>
-                            <div class="summary-detail">${Math.round(bestYear.satisfaction)}% satisfaction (${bestYear.rated} books)</div>
+                            <div class="summary-detail">${Math.round(bestYear.satisfaction)}% (${bestYear.rated} books)</div>
                         </div>
                         <div class="highlight-card">
                             <div class="highlight-label">Room for Improvement</div>
                             <div class="highlight-value worst">${worstYear.year}</div>
-                            <div class="summary-detail">${Math.round(worstYear.satisfaction)}% satisfaction (${worstYear.rated} books)</div>
+                            <div class="summary-detail">${Math.round(worstYear.satisfaction)}% (${worstYear.rated} books)</div>
                         </div>
                     </div>
                     ` : ''}
                 </div>
-                
+
+                <div class="section-divider"><span>Patterns</span></div>
+
+                <!-- GitHub-style Heatmap -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Reading Satisfaction Heatmap</h2>
+                    <p class="chart-description">
+                        Each cell is a week. Green = satisfied, red = unsatisfied, gold = mixed.
+                    </p>
+                    <div class="heatmap-container" id="heatmap-container"></div>
+                    <div class="heatmap-legend">
+                        <div class="heatmap-legend-item">
+                            <div class="heatmap-cell satisfied"></div> Satisfied
+                        </div>
+                        <div class="heatmap-legend-item">
+                            <div class="heatmap-cell unsatisfied"></div> Unsatisfied
+                        </div>
+                        <div class="heatmap-legend-item">
+                            <div class="heatmap-cell mixed"></div> Mixed
+                        </div>
+                        <div class="heatmap-legend-item">
+                            <div class="heatmap-cell empty"></div> No books
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cumulative Satisfaction -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Cumulative Satisfaction Over Time</h2>
+                    <p class="chart-description">
+                        Is your book-picking improving? This shows your rolling satisfaction rate as you read more books.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="cumulativeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Streak Analysis -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Streak Analysis</h2>
+                    <p class="chart-description">
+                        Your longest runs of consecutive satisfied/unsatisfied reads.
+                    </p>
+                    <div class="streak-display">
+                        <div class="streak-card">
+                            <div class="streak-value" style="color: var(--accent-yes)">${maxSatisfiedStreak}</div>
+                            <div class="streak-label">Best Streak</div>
+                            <div class="streak-detail">Consecutive satisfying reads${satisfiedStreakEnd ? ` ending ${formatDateHuman(satisfiedStreakEnd)}` : ''}</div>
+                        </div>
+                        <div class="streak-card">
+                            <div class="streak-value" style="color: var(--accent-no)">${maxUnsatisfiedStreak}</div>
+                            <div class="streak-label">Worst Slump</div>
+                            <div class="streak-detail">Consecutive disappointing reads${unsatisfiedStreakEnd ? ` ending ${formatDateHuman(unsatisfiedStreakEnd)}` : ''}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"><span>Volume vs Quality</span></div>
+
+                <!-- Volume vs Pickiness -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Volume vs Pickiness</h2>
+                    <p class="chart-description">
+                        In years you read more, were you less selective? Each dot is a year.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+
+                ${loyalAuthors.length > 0 ? `
+                <div class="section-divider"><span>Author Loyalty</span></div>
+
+                <!-- Author Analysis -->
+                <div class="chart-section">
+                    <h2 class="chart-title">Authors You've Read Most</h2>
+                    <p class="chart-description">
+                        Authors with 3+ books read. Should you keep reading them?
+                    </p>
+                    <div class="author-grid">
+                        ${loyalAuthors.map(a => `
+                            <div class="author-card">
+                                <div>
+                                    <div class="author-name">${escapeHtml(a.author)}</div>
+                                    <div class="author-stats">${a.total} books · ${a.rated} rated</div>
+                                </div>
+                                <div class="author-rate ${a.satisfaction >= 70 ? 'high' : a.satisfaction <= 40 ? 'low' : 'medium'}">
+                                    ${Math.round(a.satisfaction)}%
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="section-divider"><span>Details</span></div>
+
                 <!-- Breakdown Table -->
                 <div class="chart-section">
                     <h2 class="chart-title">Year by Year Breakdown</h2>
@@ -426,8 +764,8 @@
                             <tr>
                                 <th>Year</th>
                                 <th>Books</th>
-                                <th>Satisfied</th>
-                                <th>Unsatisfied</th>
+                                <th>Yes</th>
+                                <th>No</th>
                                 <th>Rate</th>
                                 <th style="width: 150px;">Distribution</th>
                             </tr>
@@ -439,7 +777,6 @@
                                 const rate = rated > 0 ? Math.round((d.yes / rated) * 100) : '-';
                                 const yesWidth = rated > 0 ? (d.yes / rated) * 100 : 0;
                                 const noWidth = rated > 0 ? (d.no / rated) * 100 : 0;
-                                
                                 return `
                                 <tr>
                                     <td class="year-col">${year}</td>
@@ -460,21 +797,23 @@
                     </table>
                 </div>
             `;
-            
-            // Create the chart
-            createChart(years, byYear);
+
+            // Create charts
+            createMainChart(years, byYear);
+            createScatterChart(years, byYear);
+            createCumulativeChart(cumulativeData);
+            createHeatmap(byDate, allYears);
         }
-        
-        function createChart(years, byYear) {
+
+        function createMainChart(years, byYear) {
             const ctx = document.getElementById('mainChart').getContext('2d');
-            
             const bookCounts = years.map(y => byYear[y].total);
             const satisfactionRates = years.map(y => {
                 const d = byYear[y];
                 const rated = d.yes + d.no;
                 return rated > 0 ? (d.yes / rated) * 100 : null;
             });
-            
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -509,108 +848,274 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: { family: "'DM Sans', sans-serif" },
-                                usePointStyle: true,
-                                padding: 20
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    if (context.dataset.label === 'Satisfaction %') {
-                                        return context.raw !== null 
-                                            ? `Satisfaction: ${Math.round(context.raw)}%`
-                                            : 'Not enough data';
-                                    }
-                                    return `Books: ${context.raw}`;
-                                }
-                            }
-                        }
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } }
                     },
                     scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                font: { family: "'DM Sans', sans-serif" }
-                            }
-                        },
+                        x: { grid: { display: false } },
                         y: {
                             type: 'linear',
                             position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Books Read',
-                                font: { family: "'DM Sans', sans-serif" }
-                            },
+                            title: { display: true, text: 'Books Read' },
                             grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: {
-                                font: { family: "'DM Sans', sans-serif" }
-                            },
                             beginAtZero: true
                         },
                         y1: {
                             type: 'linear',
                             position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Satisfaction %',
-                                font: { family: "'DM Sans', sans-serif" }
-                            },
-                            min: 0,
-                            max: 100,
+                            title: { display: true, text: 'Satisfaction %' },
+                            min: 0, max: 100,
                             grid: { display: false },
-                            ticks: {
-                                font: { family: "'DM Sans', sans-serif" },
-                                callback: value => value + '%'
-                            }
+                            ticks: { callback: v => v + '%' }
                         }
                     }
                 }
             });
         }
-        
+
+        function createScatterChart(years, byYear) {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+
+            const scatterData = years
+                .filter(y => (byYear[y].yes + byYear[y].no) >= 2)
+                .map(year => {
+                    const d = byYear[year];
+                    const rated = d.yes + d.no;
+                    return {
+                        x: d.total,
+                        y: (d.yes / rated) * 100,
+                        year
+                    };
+                });
+
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Year',
+                        data: scatterData,
+                        backgroundColor: 'rgba(61, 139, 110, 0.6)',
+                        borderColor: '#3D8B6E',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.raw.year}: ${ctx.raw.x} books, ${Math.round(ctx.raw.y)}% satisfaction`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Books Read' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Satisfaction %' },
+                            min: 0, max: 100,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { callback: v => v + '%' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCumulativeChart(cumulativeData) {
+            const ctx = document.getElementById('cumulativeChart').getContext('2d');
+
+            // Filter to MIN_YEAR onwards (like other charts)
+            const filteredData = MIN_YEAR
+                ? cumulativeData.filter(d => parseInt(d.date.split('-')[0]) >= MIN_YEAR)
+                : cumulativeData;
+
+            // Sample data to avoid too many points
+            const step = Math.max(1, Math.floor(filteredData.length / 100));
+            const sampledData = filteredData.filter((_, i) => i % step === 0 || i === filteredData.length - 1);
+
+            // Convert to {x, y} format for time scale
+            const chartData = sampledData.map(d => ({
+                x: d.date,
+                y: d.satisfaction,
+                total: d.total
+            }));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Cumulative Satisfaction',
+                        data: chartData,
+                        borderColor: '#3D8B6E',
+                        backgroundColor: 'rgba(61, 139, 110, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: ctx => ctx[0].raw.x || '',
+                                label: ctx => `${Math.round(ctx.raw.y)}% satisfaction after ${ctx.raw.total} books`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'year',
+                                displayFormats: { year: 'yyyy' }
+                            },
+                            grid: { display: false },
+                            ticks: { maxRotation: 0 }
+                        },
+                        y: {
+                            min: 0, max: 100,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { callback: v => v + '%' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createHeatmap(byDate, allYears) {
+            const container = document.getElementById('heatmap-container');
+            const displayYears = MIN_YEAR ? allYears.filter(y => y >= MIN_YEAR) : allYears;
+
+            // Build horizontal heatmap: each row is a year, each column is a week
+            let html = '<div class="heatmap-wrapper">';
+
+            // Month labels at top - flex width proportional to weeks per month
+            const monthWeeks = [
+                { name: 'Jan', weeks: 4 },
+                { name: 'Feb', weeks: 4 },
+                { name: 'Mar', weeks: 5 },
+                { name: 'Apr', weeks: 4 },
+                { name: 'May', weeks: 5 },
+                { name: 'Jun', weeks: 4 },
+                { name: 'Jul', weeks: 4 },
+                { name: 'Aug', weeks: 5 },
+                { name: 'Sep', weeks: 4 },
+                { name: 'Oct', weeks: 5 },
+                { name: 'Nov', weeks: 4 },
+                { name: 'Dec', weeks: 4 }
+            ];
+            html += '<div class="heatmap-month-labels">';
+            monthWeeks.forEach(m => {
+                // Use flex-grow proportional to weeks in month
+                html += `<div class="heatmap-month-label" style="flex: ${m.weeks}">${m.name}</div>`;
+            });
+            html += '</div>';
+
+            // One row per year
+            displayYears.forEach(year => {
+                html += '<div class="heatmap-year-row">';
+                html += `<div class="heatmap-year-label">${year}</div>`;
+                html += '<div class="heatmap-weeks">';
+
+                // 52 weeks per year
+                for (let w = 1; w <= 52; w++) {
+                    const weekStart = getDateOfWeek(w, year);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+
+                    let yes = 0, no = 0, titles = [];
+                    Object.entries(byDate).forEach(([date, data]) => {
+                        const d = new Date(date);
+                        if (d >= weekStart && d <= weekEnd) {
+                            yes += data.yes;
+                            no += data.no;
+                            titles = titles.concat(data.books);
+                        }
+                    });
+
+                    const total = yes + no;
+                    let cellClass = 'empty';
+                    if (total > 0) {
+                        const rate = yes / total;
+                        if (rate >= 0.7) cellClass = 'satisfied';
+                        else if (rate <= 0.3) cellClass = 'unsatisfied';
+                        else cellClass = 'mixed';
+                    }
+
+                    const tooltip = total > 0
+                        ? `Week ${w}, ${year}: ${yes} yes, ${no} no`
+                        : `Week ${w}, ${year}: No books`;
+
+                    html += `<div class="heatmap-cell ${cellClass}" title="${escapeHtml(tooltip)}"></div>`;
+                }
+
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function getDateOfWeek(week, year) {
+            const d = new Date(year, 0, 1);
+            const dayNum = d.getDay();
+            const diff = (week - 1) * 7 + (dayNum <= 4 ? 1 - dayNum : 8 - dayNum);
+            d.setDate(d.getDate() + diff);
+            return d;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDateHuman(isoDate) {
+            if (!isoDate) return '';
+            const date = new Date(isoDate + 'T00:00:00'); // Ensure consistent parsing
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
         function renderError(message) {
             document.getElementById('content').innerHTML = `
                 <div class="no-data">
                     <h2>No data yet</h2>
                     <p>${message}</p>
-                    <p style="margin-top: 1rem;">
-                        <a href="index.html">Go rate some books →</a>
-                    </p>
+                    <p style="margin-top: 1rem;"><a href="index.html">Go rate some books →</a></p>
                 </div>
             `;
         }
-        
+
         // ============================================
         // Initialize
         // ============================================
         async function init() {
             try {
                 const { books, ratings } = await loadData();
-                
-                // Check if we have any ratings
                 const ratedCount = Object.values(ratings).filter(r => r === 'yes' || r === 'no').length;
-                if (ratedCount === 0) {
-                    throw new Error('No books have been rated yet.');
-                }
-                
+                if (ratedCount === 0) throw new Error('No books have been rated yet.');
                 const processed = processData(books, ratings);
                 render(processed);
-                
             } catch (error) {
                 console.error('Error:', error);
                 renderError(error.message);
             }
         }
-        
+
         init();
     </script>
 </body>

@@ -30,31 +30,49 @@ class Book(TypedDict):
     title: str
     authors: str
     year_read: int
+    date_read: Optional[str]  # Full date in YYYY-MM-DD format
     isbn: Optional[str]
     cover_url: Optional[str]
     format: Optional[str]
 
 
-def parse_year_from_date(date_str: str) -> Optional[int]:
-    """Extract year from various date formats StoryGraph uses."""
+def parse_date(date_str: str) -> tuple[Optional[int], Optional[str]]:
+    """
+    Parse date string and return (year, full_date_iso).
+    Full date is in YYYY-MM-DD format when available.
+    """
     if not date_str or date_str.strip() == "":
-        return None
+        return None, None
 
     # Try common formats
-    formats = ["%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%m/%d/%Y", "%B %d, %Y", "%Y"]
+    formats = ["%Y-%m-%d", "%Y/%m/%d", "%d/%m/%Y", "%m/%d/%Y", "%B %d, %Y"]
     for fmt in formats:
         try:
-            return datetime.strptime(date_str.strip(), fmt).year
+            dt = datetime.strptime(date_str.strip(), fmt)
+            return dt.year, dt.strftime("%Y-%m-%d")
         except ValueError:
             continue
+
+    # Try year-only format
+    try:
+        dt = datetime.strptime(date_str.strip(), "%Y")
+        return dt.year, None  # No full date available
+    except ValueError:
+        pass
 
     # Last resort: look for a 4-digit year anywhere in the string
     import re
     match = re.search(r'\b(19|20)\d{2}\b', date_str)
     if match:
-        return int(match.group())
+        return int(match.group()), None
 
-    return None
+    return None, None
+
+
+def parse_year_from_date(date_str: str) -> Optional[int]:
+    """Extract year from various date formats StoryGraph uses."""
+    year, _ = parse_date(date_str)
+    return year
 
 
 def fetch_cover_by_search(title: str, author: str, max_retries: int = 3) -> Optional[str]:
@@ -177,12 +195,12 @@ def process_csv(csv_path: Path) -> list[Book]:
             if read_status.lower() not in ["read", "finished"]:
                 continue
 
-            year = parse_year_from_date(date_read)
+            year, full_date = parse_date(date_read)
             if not year:
                 dates_read = get_col(["dates read"])
                 if dates_read:
                     parts = dates_read.split("-")
-                    year = parse_year_from_date(parts[-1].strip())
+                    year, full_date = parse_date(parts[-1].strip())
 
             if not year:
                 print(f"  Warning: No year found for '{title}', skipping", file=sys.stderr)
@@ -195,6 +213,7 @@ def process_csv(csv_path: Path) -> list[Book]:
                 "title": title.strip(),
                 "authors": authors.strip(),
                 "year_read": year,
+                "date_read": full_date,
                 "isbn": clean_isbn_val,
                 "cover_url": None,
                 "format": book_format.strip() if book_format else None,
