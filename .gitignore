@@ -174,4 +174,5 @@ cython_debug/
 .pypirc
 
 .claude/
+.mcp.json
 data/
